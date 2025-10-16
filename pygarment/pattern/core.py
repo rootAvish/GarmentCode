@@ -23,7 +23,8 @@ standard_filenames = [
 pattern_spec_template = {
     'pattern': {
         'panels': {},
-        'stitches': []
+        'stitches': [],
+        'overlay_stitches': []
     },
     'parameters': {},
     'parameter_order': [],
@@ -39,7 +40,8 @@ panel_spec_template = {
     'translation': [ 0, 0, 0 ],
     'rotation': [ 0, 0, 0 ],
     'vertices': [],
-    'edges': []
+    'edges': [],
+    'internal_edges': []
 }
 
 class EmptyPatternError(BaseException):
@@ -433,6 +435,18 @@ class BasicPattern(object):
                     if self.pattern['stitches'][stitch_id][side_id]['panel'] == panel_name:
                         old_edge_id = self.pattern['stitches'][stitch_id][side_id]['edge']
                         self.pattern['stitches'][stitch_id][side_id]['edge'] = rotated_edge_ids[old_edge_id]
+
+        # Overlay stitches -- update only references to outer edges (internal edges keep their ids)
+        if 'overlay_stitches' in self.pattern.keys():
+            for stitch_id in range(len(self.pattern['overlay_stitches'])):
+                # two sides: overlay and base
+                for side_id in [0, 1]:
+                    side = self.pattern['overlay_stitches'][stitch_id][side_id]
+                    if side.get('panel') == panel_name:
+                        # If this side references an outer edge, remap; internal edges are not rotated
+                        if 'edge' in side:
+                            old_edge_id = side['edge']
+                            side['edge'] = rotated_edge_ids[old_edge_id]
 
         return rotated_edge_ids, flipped
 
@@ -964,5 +978,4 @@ class ParametrizedPattern(BasicPattern):
                 self.parameters[parameter]['value'] = values
             else:  # simple 1-value parameter
                 self.parameters[parameter]['value'] = self._new_value(param_ranges)
-
 

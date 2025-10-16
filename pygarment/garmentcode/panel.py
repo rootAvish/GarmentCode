@@ -34,6 +34,7 @@ class Panel(BaseComponent):
         self.rotation = R.from_euler('XYZ', [0, 0, 0])  # zero rotation
         # NOTE: initiating with empty sequence allows .append() to it safely
         self.edges = EdgeSequence()
+        self.internal_edges = []  # list of EdgeSequence representing internal paths
 
     # Info
     def pivot_3D(self):
@@ -216,8 +217,10 @@ class Panel(BaseComponent):
         # Case Around Y
         if close_enough(axis[0], tol=1e-4):  # reflection around Y
 
-            # Vertices
+            # Vertices: reflect outer loop and internal paths
             self.edges.reflect([0, 0], [0, 1])
+            for path in self.internal_edges:
+                path.reflect([0, 0], [0, 1])
             
             # Position
             self.translation[0] *= -1
@@ -315,8 +318,29 @@ class Panel(BaseComponent):
         spattern.name = self.name
         spattern.pattern['panels'] = {self.name: vars(panel)}
 
+        # Internal edges assembly
+        # Append internal path vertices and edges; reference endpoints by indices
+        internal_edges_out = []
+        for path in self.internal_edges:
+            # collect vertices for this path
+            path_vertices = []
+            path_edges_out = []
+            for e in path:
+                verts, eprops = e.assembly()
+                # append vertices, track indices
+                vert_shift = len(panel.vertices)
+                panel.vertices += verts
+                # endpoints reference in panel vertex list
+                eprops['endpoints'] = [id + vert_shift for id in eprops['endpoints']]
+                path_edges_out.append(eprops)
+            internal_edges_out.append(path_edges_out)
+        # store internal edges on panel spec
+        spattern.pattern['panels'][self.name]['internal_edges'] = internal_edges_out
+
         # Assembly stitching info (panel might have inner stitches)
         spattern.pattern['stitches'] = self.stitching_rules.assembly()
+        # Overlay stitching info
+        spattern.pattern['overlay_stitches'] = self.overlay_stitching_rules.assembly()
 
         return spattern
 

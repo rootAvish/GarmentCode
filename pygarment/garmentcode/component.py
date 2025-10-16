@@ -105,9 +105,11 @@ class Component(BaseComponent):
                                           **sub_raw['panels']}
 
             # of stitches
-            spattern.pattern['stitches'] += sub_raw['stitches']
+            spattern.pattern['stitches'] += sub_raw.get('stitches', [])
+            spattern.pattern['overlay_stitches'] += sub_raw.get('overlay_stitches', [])
 
         spattern.pattern['stitches'] += self.stitching_rules.assembly()
+        spattern.pattern['overlay_stitches'] += self.overlay_stitching_rules.assembly()
         return spattern   
 
     def bbox3D(self):
@@ -144,4 +146,3 @@ class Component(BaseComponent):
         return list(set([att
                          for att in all_attrs
                          if isinstance(att, BaseComponent)] + self.subs))
-

@@ -9,6 +9,7 @@ import svgpathtools as svgpath
 
 from pygarment.garmentcode.edge import Edge, CurveEdge, EdgeSequence, ILENGTH_S_TOL
 from pygarment.garmentcode.interface import Interface
+from pygarment.garmentcode.connector import OverlayStitchingRule
 from pygarment.garmentcode.utils import vector_angle, close_enough, c_to_list, c_to_np
 from pygarment.garmentcode.utils import list_to_c
 from pygarment.garmentcode.base import BaseComponent
@@ -465,6 +466,31 @@ def even_armhole_openings(front_opening, back_opening, tol=1e-2, verbose: bool =
     back_opening.rotate(slope_angle)
 
     return front_opening, back_opening
+
+
+# ANCHOR ----- Overlay helpers -----
+def add_internal_path(panel, path: EdgeSequence):
+    """Register an internal path (EdgeSequence) on a panel for overlay stitches.
+    Vertices will be embedded during panel assembly.
+    """
+    panel.internal_edges.append(path)
+    return len(panel.internal_edges) - 1  # return path id
+
+
+def connect_overlay_to_internal(overlay_panel, overlay_edge_id, base_panel, internal_path_id, internal_edge_id):
+    """Create an overlay stitching rule from overlay panel edge to base panel internal path edge.
+    """
+    if hasattr(overlay_panel, 'overlay_stitching_rules'):
+        overlay_panel.overlay_stitching_rules.append(
+            (overlay_panel.name, overlay_edge_id, base_panel.name, internal_path_id, internal_edge_id)
+        )
+    else:
+        # Fallback if used on Panel directly
+        from pygarment.garmentcode.connector import OverlayStitches
+        overlay_panel.overlay_stitching_rules = OverlayStitches(
+            (overlay_panel.name, overlay_edge_id, base_panel.name, internal_path_id, internal_edge_id)
+        )
+    return overlay_panel
 
 
 # ANCHOR ----- Curve tools -----

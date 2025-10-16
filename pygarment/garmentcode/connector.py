@@ -195,3 +195,38 @@ class Stitches:
         for rule in self.rules:
             stitches += rule.assembly()
         return stitches
+
+
+class OverlayStitchingRule:
+    """Overlay/topstitch rule: connects an edge from an overlay panel
+    to an internal path edge of a base panel.
+    """
+    def __init__(self, overlay_panel_name: str, overlay_edge_id: int,
+                 base_panel_name: str, base_internal_path_id: int, base_internal_edge_id: int) -> None:
+        self.overlay_panel = overlay_panel_name
+        self.overlay_edge = overlay_edge_id
+        self.base_panel = base_panel_name
+        self.base_internal_path = base_internal_path_id
+        self.base_internal_edge = base_internal_edge_id
+
+    def assembly(self):
+        return [[
+            {'panel': self.overlay_panel, 'edge': self.overlay_edge},
+            {'panel': self.base_panel, 'internal_path': self.base_internal_path, 'internal_edge': self.base_internal_edge}
+        ]]
+
+
+class OverlayStitches:
+    """Collection of overlay stitch rules."""
+    def __init__(self, *rules) -> None:
+        # rules: tuples (overlay_panel_name, overlay_edge_id, base_panel_name, base_internal_path_id, base_internal_edge_id)
+        self.rules = [OverlayStitchingRule(*r) for r in rules]
+
+    def append(self, rule_tuple):
+        self.rules.append(OverlayStitchingRule(*rule_tuple))
+
+    def assembly(self):
+        res = []
+        for rule in self.rules:
+            res += rule.assembly()
+        return res

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 import numpy as np
 
-from pygarment.garmentcode.connector import Stitches
+from pygarment.garmentcode.connector import Stitches, OverlayStitches
 
 
 class BaseComponent(ABC):
@@ -21,6 +21,7 @@ class BaseComponent(ABC):
 
         # Rules for connecting subcomponents
         self.stitching_rules = Stitches()
+        self.overlay_stitching_rules = OverlayStitches()
 
     # Info
     def pivot_3D(self):
@@ -137,5 +138,4 @@ class BaseComponent(ABC):
         # TODO not just placement by the midpoint of the interfaces?
         # It created a little overlap when both interfaces are angled a little differently
         return self
-
 
